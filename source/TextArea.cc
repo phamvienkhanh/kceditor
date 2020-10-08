@@ -1,10 +1,12 @@
 #include "TextArea.h"
+#include "utils/lexerUtils.hpp"
 #include <fstream>
 
 #define MY_KEY_RETURN 10
 #define MY_KEY_BACK 127
+#define MY_KEY_TAB 9
 
-
+extern int g_exitApp;
 
 TextArea::TextArea(/* args */)
 {
@@ -45,6 +47,8 @@ TextArea::TextArea(/* args */)
     // m_text.push_back("        m_cursor.row++;");
     // m_text.push_back("    }");
     m_text.push_back("");
+
+    init_pair(1, COLOR_RED, -1);
 }
 
 void TextArea::moveCurUp()
@@ -311,8 +315,15 @@ void TextArea::HanldeEvents()
         deleteCharCurPos();
         break;
 
+    case MY_KEY_TAB:
+        for(int i = 0; i < 4; i++) {
+            if(appendCharCurPos(' '))
+            moveCurRight();
+        }
+        break;
+
     case KEY_CLOSE:
-        exit(0);
+        g_exitApp = true;
         break;
     
     case KEY_F(2):
@@ -324,9 +335,9 @@ void TextArea::HanldeEvents()
         break;
 
     case KEY_F(4):
-        exit(0);
+        g_exitApp = true;
         break;
-    
+
     default:
         if(appendCharCurPos(c))
             moveCurRight();
@@ -385,7 +396,7 @@ void TextArea::DrawBoder()
 
 void TextArea::Render()
 {
-    wclear(m_window);
+    // wclear(m_window);
     // renderRow(m_cursor.row);
 
     // if(!m_linesShouldRender.empty())
@@ -410,8 +421,25 @@ void TextArea::Render()
         if(colInText < m_text[rowInText].size())
             lineTruncate = m_text[rowInText].substr(colInText, m_scrollView.size.width);
         
+        clearRow(row);
         wmove(m_window, row, 0);
-        wprintw(m_window, lineTruncate.c_str());
+        Lexer lex(lineTruncate.c_str());
+        for (auto token = lex.next();
+            not token.is_one_of(Token::Kind::End, Token::Kind::Unexpected);
+            token = lex.next()) 
+        {
+            if(token.lexeme() == "void")
+            {
+                wattron(m_window, COLOR_PAIR(1));
+                wprintw(m_window, token.lexeme().c_str());
+                wattroff(m_window, COLOR_PAIR(1));
+            }
+            else
+            {
+                wprintw(m_window, token.lexeme().c_str());
+            }
+            
+        }
     }
 
     wmove(m_window, m_cursor.row, m_cursor.col);

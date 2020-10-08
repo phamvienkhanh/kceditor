@@ -363,27 +363,27 @@ std::ostream& operator<<(std::ostream& os, const Token::Kind& kind) {
   return os << names[static_cast<int>(kind)];
 }
 
-int main() {
-  auto code =
-        "void TextArea::moveCurUp()\n"
-        "{\n"
-        "if(m_cursor.row > 0)\n"
-        "{"
-            "m_cursor.row--;"
-        "}"
-        "else if(m_cursor.row == 0)"
-        "{"
-            "if(m_scrollView.pos.row > 0)"
-            "{"
-               "m_scrollView.pos.row--;"
-            "}"
-        "}";
+// int main() {
+//   auto code =
+//         "void TextArea::moveCurUp()\n"
+//         "{\n"
+//         "if(m_cursor.row > 0)\n"
+//         "{"
+//             "m_cursor.row--;"
+//         "}"
+//         "else if(m_cursor.row == 0)"
+//         "{"
+//             "if(m_scrollView.pos.row > 0)"
+//             "{"
+//                "m_scrollView.pos.row--;"
+//             "}"
+//         "}";
 
-  Lexer lex(code);
-  for (auto token = lex.next();
-       not token.is_one_of(Token::Kind::End, Token::Kind::Unexpected);
-       token = lex.next()) {
-    std::cout << std::setw(12) << token.kind() << " |" << token.lexeme()
-              << "|\n";
-  }
-}
+//   Lexer lex(code);
+//   for (auto token = lex.next();
+//        not token.is_one_of(Token::Kind::End, Token::Kind::Unexpected);
+//        token = lex.next()) {
+//     std::cout << std::setw(12) << token.kind() << " |" << token.lexeme()
+//               << "|\n";
+//   }
+// }

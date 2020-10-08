@@ -1,6 +1,8 @@
 #include "TextArea.h"
 #include <string>
 
+bool g_exitApp = false;
+
 void clear_bar(WINDOW* bar) {
 	wclear(bar);
 	int i;
@@ -42,11 +44,9 @@ int main(int argc, char** args)
 	TextArea textArea;
 	textArea.DrawBoder();
 
-	while(1) {
-		
+	while(!g_exitApp) {
 		textArea.HanldeEvents();
 		textArea.Render();
-		
 	}
 
 exit:
