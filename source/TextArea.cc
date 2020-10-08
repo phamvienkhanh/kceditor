@@ -1,5 +1,6 @@
 #include "TextArea.h"
 #include "utils/lexerUtils.hpp"
+#include "utils/json11.hpp"
 #include <fstream>
 
 #define MY_KEY_RETURN 10
@@ -48,7 +49,24 @@ TextArea::TextArea(/* args */)
     // m_text.push_back("    }");
     m_text.push_back("");
 
-    init_pair(1, COLOR_RED, -1);
+    // load syntax file
+    std::ifstream t("./syntax.json");
+    std::string str((std::istreambuf_iterator<char>(t)),
+                  std::istreambuf_iterator<char>());
+  
+    std::string err_comment;
+    auto json_comment = json11::Json::parse(str.c_str(), err_comment);
+    auto listC = json_comment["configurations"].array_items();
+    int idColor = 1;
+    for(auto iItem : listC)
+    {
+      std::string key     = iItem["key"].string_value();
+      int         colorN  = iItem["fg"].int_value();
+
+      init_pair(idColor, colorN, -1);
+      m_colorMap[key] = idColor;
+      idColor++;
+    }
 }
 
 void TextArea::moveCurUp()
@@ -423,16 +441,19 @@ void TextArea::Render()
         
         clearRow(row);
         wmove(m_window, row, 0);
+
         Lexer lex(lineTruncate.c_str());
         for (auto token = lex.next();
             not token.is_one_of(Token::Kind::End, Token::Kind::Unexpected);
             token = lex.next()) 
         {
-            if(token.lexeme() == "void")
+            std::string strToken = token.lexeme();
+            int colorId= m_colorMap[strToken];
+            if(colorId != 0)
             {
-                wattron(m_window, COLOR_PAIR(1));
-                wprintw(m_window, token.lexeme().c_str());
-                wattroff(m_window, COLOR_PAIR(1));
+                wattron(m_window, COLOR_PAIR(colorId));
+                wprintw(m_window, strToken.c_str());
+                wattroff(m_window, COLOR_PAIR(colorId));
             }
             else
             {

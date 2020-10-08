@@ -5,7 +5,19 @@
 // J. Arrieta
 // (C) 2018 Nabla Zero Labs
 
+#include <cassert>
 #include <string>
+#include <cstdio>
+#include <cstring>
+#include <iostream>
+#include <sstream>
+#include "utils/json11.hpp"
+#include <list>
+#include <set>
+#include <unordered_map>
+#include <algorithm>
+#include <type_traits>
+
 
 class Token {
  public:
@@ -363,27 +375,25 @@ std::ostream& operator<<(std::ostream& os, const Token::Kind& kind) {
   return os << names[static_cast<int>(kind)];
 }
 
-int main() {
-  auto code =
-        "void TextArea::moveCurUp()\n"
-        "{\n"
-        "if(m_cursor.row > 0)\n"
-        "{"
-            "m_cursor.row--;"
-        "}"
-        "else if(m_cursor.row == 0)"
-        "{"
-            "if(m_scrollView.pos.row > 0)"
-            "{"
-               "m_scrollView.pos.row--;"
-            "}"
-        "}";
+#include <string>
+#include <fstream>
+#include <streambuf>
 
-  Lexer lex(code);
-  for (auto token = lex.next();
-       not token.is_one_of(Token::Kind::End, Token::Kind::Unexpected);
-       token = lex.next()) {
-    std::cout << std::setw(12) << token.kind() << " |" << token.lexeme()
-              << "|\n";
-  }
+int main() {
+  std::ifstream t("./syntax.json");
+  std::string str((std::istreambuf_iterator<char>(t)),
+                  std::istreambuf_iterator<char>());
+  
+    std::string err_comment;
+    auto json_comment = json11::Json::parse(str.c_str(), err_comment);
+    auto listC = json_comment["configurations"].array_items();
+    for(auto iItem : listC)
+    {
+      std::cout << " key : " << iItem["key"].string_value() << std::endl;
+      std::cout << " fg  : " << iItem["fg"].int_value() << std::endl;
+    }
+
+    std::map<std::string, int> nmap;
+    nmap["x"]  = 10;
+    std::cout << nmap["x"];
 }

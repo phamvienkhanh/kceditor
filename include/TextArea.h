@@ -2,6 +2,7 @@
 #define __TEXT_AREA__
 #include <string>
 #include <vector>
+#include <map>
 #include "ncurses/curses.h"
 
 struct Point
@@ -40,6 +41,7 @@ private:
 
     std::vector<int> m_linesShouldRender;
 
+    std::map<std::string, int> m_colorMap;
 
 
 private:
