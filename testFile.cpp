@@ -45,8 +45,6 @@ private:
     int colorComment;
     int colorUserDef;
 
-    int lineNumberWidth;
-
 private:
     void moveCursor(int row, int col);
     void appendChar(int row, int col, char ch);

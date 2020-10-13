@@ -2,6 +2,8 @@
 #include "utils/lexerUtils.hpp"
 #include "utils/json11.hpp"
 #include <fstream>
+#include <queue>
+#include <regex>
 
 #define MY_KEY_RETURN 10
 #define MY_KEY_BACK 127
@@ -11,10 +13,11 @@ extern int g_exitApp;
 
 TextArea::TextArea(/* args */)
 {
+    lineNumberWidth = 2;
     m_windPos.row = 2;
-    m_windPos.col = 2;
+    m_windPos.col = 4;
     m_windSize.height = LINES - 4;
-    m_windSize.width  = COLS - 4;
+    m_windSize.width  = COLS - 4 - lineNumberWidth;
 
     m_cursor.row = 0;
     m_cursor.col = 0;
@@ -32,21 +35,6 @@ TextArea::TextArea(/* args */)
     wmove(m_window, 0, 0);
     wrefresh(m_window);
     
-    // m_text.push_back("keypad(m_window, TRUE);");
-    // m_text.push_back("wclear(m_window);");
-    // m_text.push_back("void TextArea::moveCurUp()");
-    // m_text.push_back("{");
-    // m_text.push_back("    if(m_cursor.row > 0)");
-    // m_text.push_back("    {");
-    // m_text.push_back("        m_cursor.row--;");
-    // m_text.push_back("    }");
-    // m_text.push_back("}");
-    // m_text.push_back("void TextArea::moveCurDown()");
-    // m_text.push_back("{");
-    // m_text.push_back("    if(m_cursor.row < m_text.size() - 1)");
-    // m_text.push_back("    {");
-    // m_text.push_back("        m_cursor.row++;");
-    // m_text.push_back("    }");
     m_text.push_back("");
 
     // load syntax file
@@ -57,14 +45,24 @@ TextArea::TextArea(/* args */)
     std::string err_comment;
     auto json_comment = json11::Json::parse(str.c_str(), err_comment);
     auto listC = json_comment["configurations"].array_items();
+
+    colorComment = json_comment["comment"].int_value();
+    colorUserDef = json_comment["user_def"].int_value();
+
     int idColor = 1;
+    init_color(0, 1000, 0, 0);
+
     for(auto iItem : listC)
     {
-      std::string key     = iItem["key"].string_value();
-      int         colorN  = iItem["fg"].int_value();
-
+      int colorN  = iItem["fg"].int_value();
       init_pair(idColor, colorN, -1);
-      m_colorMap[key] = idColor;
+
+      json11::Json::array keys  = iItem["keys"].array_items();
+      for(auto& key : keys)
+      {
+          m_colorMap[key.string_value()]  = idColor;
+      }
+
       idColor++;
     }
 }
@@ -215,6 +213,9 @@ void TextArea::breakNewLine()
 
 bool TextArea::appendCharCurPos(char c)
 {
+    if(c < 32 or c > 126)
+        return false;
+
     int maxRow   = m_text.size();
     int rowIndex = m_scrollView.pos.row + m_cursor.row;
     if(rowIndex > maxRow)
@@ -392,19 +393,19 @@ void TextArea::DrawBoder()
 {
     for(int iRow = 0; iRow < m_windSize.height; iRow++)
     {
-        mvaddch(iRow + m_windPos.row, m_windPos.col - 1, ACS_VLINE); // ─ ┌ ┐ ┘ └
+        mvaddch(iRow + m_windPos.row, m_windPos.col - lineNumberWidth - 1, ACS_VLINE); // ─ ┌ ┐ ┘ └
         mvaddch(iRow + m_windPos.row, m_windPos.col + m_windSize.width, ACS_VLINE);
     }
 
-    for (int iCol = 0; iCol < m_windSize.width; iCol++)
+    for (int iCol = 0; iCol < m_windSize.width + lineNumberWidth; iCol++)
     {
-        mvaddch(m_windPos.row - 1 , iCol + m_windPos.col, ACS_HLINE); // ─ ┌ ┐ ┘ └
-        mvaddch(m_windPos.row + m_windSize.height, iCol + m_windPos.col, ACS_HLINE);
+        mvaddch(m_windPos.row - 1 , iCol + m_windPos.col - lineNumberWidth, ACS_HLINE); // ─ ┌ ┐ ┘ └
+        mvaddch(m_windPos.row + m_windSize.height, iCol + m_windPos.col - lineNumberWidth, ACS_HLINE);
     }
 
-    mvaddch(m_windPos.row - 1, m_windPos.col - 1, ACS_ULCORNER);
-    mvaddch(m_windPos.row - 1, m_windPos.col + m_windSize.width , ACS_URCORNER);
-    mvaddch(m_windPos.row + m_windSize.height, m_windPos.col - 1, ACS_LLCORNER);
+    mvaddch(m_windPos.row - 1, m_windPos.col - lineNumberWidth - 1, ACS_ULCORNER);
+    mvaddch(m_windPos.row - 1, m_windPos.col + m_windSize.width, ACS_URCORNER);
+    mvaddch(m_windPos.row + m_windSize.height, m_windPos.col - lineNumberWidth - 1, ACS_LLCORNER);
     mvaddch(m_windPos.row + m_windSize.height, m_windPos.col + m_windSize.width, ACS_LRCORNER);
 
     
@@ -442,13 +443,29 @@ void TextArea::Render()
         clearRow(row);
         wmove(m_window, row, 0);
 
+        // wprintw(m_window, lineTruncate.c_str());
+
+        // parseUserDefColor();
+
         Lexer lex(lineTruncate.c_str());
         for (auto token = lex.next();
             not token.is_one_of(Token::Kind::End, Token::Kind::Unexpected);
             token = lex.next()) 
         {
             std::string strToken = token.lexeme();
-            int colorId= m_colorMap[strToken];
+            int colorId = 0;
+
+            if(token.kind() == Token::Kind::Comment) 
+            {
+                colorId = colorComment;
+            }
+            else
+            {
+                colorId = m_colorMap[strToken];
+                if(colorId == 0)
+                    colorId = m_cmUserTypeDef[strToken];
+            }
+
             if(colorId != 0)
             {
                 wattron(m_window, COLOR_PAIR(colorId));
@@ -457,15 +474,31 @@ void TextArea::Render()
             }
             else
             {
-                wprintw(m_window, token.lexeme().c_str());
+                wprintw(m_window, strToken.c_str());
             }
-            
         }
     }
 
     wmove(m_window, m_cursor.row, m_cursor.col);
     // box(m_window, 0, 0);
     wrefresh(m_window);
+}
+
+void TextArea::parseUserDefColor()
+{
+    m_cmUserTypeDef.clear();
+
+    std::smatch typeMatch;
+    std::regex  typeRegx(R"(class\s([A-Za-z0-9]+))");
+
+    for(auto iLine : m_text)
+    {
+        if(std::regex_search(iLine, typeMatch, typeRegx)) {
+            if (typeMatch.size() > 1) {
+                m_cmUserTypeDef[typeMatch[1].str()] = colorUserDef;
+            }
+        }
+    }
 }
 
 void TextArea::SaveToFile(std::string fileName)

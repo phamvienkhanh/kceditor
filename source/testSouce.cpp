@@ -378,22 +378,54 @@ std::ostream& operator<<(std::ostream& os, const Token::Kind& kind) {
 #include <string>
 #include <fstream>
 #include <streambuf>
+#include <regex>
 
 int main() {
-  std::ifstream t("./syntax.json");
-  std::string str((std::istreambuf_iterator<char>(t)),
-                  std::istreambuf_iterator<char>());
+  // std::ifstream t("./syntax.json");
+  // std::string str((std::istreambuf_iterator<char>(t)),
+  //                 std::istreambuf_iterator<char>());
   
-    std::string err_comment;
-    auto json_comment = json11::Json::parse(str.c_str(), err_comment);
-    auto listC = json_comment["configurations"].array_items();
-    for(auto iItem : listC)
-    {
-      std::cout << " key : " << iItem["key"].string_value() << std::endl;
-      std::cout << " fg  : " << iItem["fg"].int_value() << std::endl;
-    }
+  //   std::string err_comment;
+  //   auto json_comment = json11::Json::parse(str.c_str(), err_comment);
+  //   auto listC = json_comment["configurations"].array_items();
+  //   for(auto iItem : listC)
+  //   {
+  //     std::cout << " key : " << iItem["key"].string_value() << std::endl;
+  //     std::cout << " fg  : " << iItem["fg"].int_value() << std::endl;
+  //   }
 
-    std::map<std::string, int> nmap;
-    nmap["x"]  = 10;
-    std::cout << nmap["x"];
+  //   std::map<std::string, int> nmap;
+  //   nmap["x"]  = 10;
+  //   std::cout << nmap["x"];
+
+  // std::smatch typeMatch;
+  // std::regex typeRegx(R"(class\s([A-Za-z0-9]+))");
+  // std::string line = "class nameClass ";
+  // if(std::regex_search(line, typeMatch, typeRegx)) {
+  //     if (typeMatch.size() > 1) 
+  //         std::cout << typeMatch[1].str() << '\n';
+  // }
+
+    auto code =
+        "void // TextAr"
+        "{\n"
+        "if(m_cursor.row > 0)\n"
+        "{\n"
+            "m_cursor.row--;\n"
+        "}\n"
+        "else if(m_cursor.row == 0)\n"
+        "{\n"
+            "// if(m_scrollView.pos.row > 0)\n"
+            "{\n"
+               "m_scrollView.pos.row--;\n"
+            "}\n"
+        "}\n";
+
+  Lexer lex(code);
+  for (auto token = lex.next();
+       not token.is_one_of(Token::Kind::End, Token::Kind::Unexpected);
+       token = lex.next()) {
+    std::cout << std::setw(12) << token.kind() << " |" << token.lexeme()
+              << "|\n";
+  }
 }

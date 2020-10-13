@@ -331,18 +331,17 @@ Token Lexer::number() noexcept {
 }
 
 Token Lexer::slash_or_comment() noexcept {
-  const char* start = m_beg;
+  const char* start      = m_beg;
   get();
   if (peek() == '/') {
     get();
-    start = m_beg;
     while (peek() != '\0') {
       if (get() == '\n') {
         return Token(Token::Kind::Comment, start,
                      std::distance(start, m_beg) - 1);
       }
     }
-    return Token(Token::Kind::Unexpected, m_beg, 1);
+    return Token(Token::Kind::Comment, start, std::distance(start, m_beg));
   } else {
     return Token(Token::Kind::Slash, start, 1);
   }

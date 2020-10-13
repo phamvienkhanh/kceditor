@@ -1,0 +1,71 @@
+{
+    "configurations": [
+        {
+            "keys": ["void", "namespace"],
+            "fg" : 0
+        },
+        {
+            "keys": ["int"],
+            "fg" : 1
+        },
+        {
+            "keys": ["main"],
+            "fg" : 2
+        },
+        {
+            "keys": ["float"],
+            "fg" : 3
+        },
+        {
+            "keys": ["class"],
+            "fg" : 4
+        },
+        {
+            "keys": ["string"],
+            "fg" : 5
+        },
+        {
+            "keys": ["std"],
+            "fg" : 6
+        },
+        {
+            "keys": ["map"],
+            "fg" : 7
+        },
+        {
+            "keys": ["for"],
+            "fg" : 8
+        },
+        {
+            "keys": ["if"],
+            "fg" : 9
+        },
+        {
+            "keys": ["#include"],
+            "fg" : 10
+        },
+        {
+            "keys": ["include"],
+            "fg" : 11
+        },
+        {
+            "keys": ["char"],
+            "fg" : 12
+        },
+        {
+            "keys": ["long"],
+            "fg" : 13
+        },
+        {
+            "keys": ["file"],
+            "fg" : 14
+        },
+        {
+            "keys": ["else"],
+            "fg" : 15
+        }
+    ],
+    "comment": 14,
+    "user_def": 7, 
+    "version": 4
+}
