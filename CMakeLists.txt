@@ -12,7 +12,7 @@ link_directories(${CMAKE_SOURCE_DIR}/libs)
 add_executable(testNcurses ${SOURCE})
 add_executable(testSource ${CMAKE_SOURCE_DIR}/source/testSouce.cpp)
 target_link_libraries(testSource -ljson11)
-target_link_libraries(testNcurses -lncurses++ -lform -lmenu -lpanel -lncurses -lutil  -ldl -ljson11)
+target_link_libraries(testNcurses -lncurses++ -lform -lmenu -lpanel -lncurses -lutil  -ldl -ljson11 -pthread)
 
 
 

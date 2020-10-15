@@ -4,6 +4,7 @@
 #include <fstream>
 #include <queue>
 #include <regex>
+#include <chrono>
 
 #define MY_KEY_RETURN 10
 #define MY_KEY_BACK 127
@@ -65,6 +66,15 @@ TextArea::TextArea(/* args */)
 
       idColor++;
     }
+
+    m_threadParseSyntax = std::thread([&](){
+        while (m_isRunThreadPraseSyntax)
+        {
+            this->parseUserDefColor();
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+        }
+        
+    });
 }
 
 void TextArea::moveCurUp()
@@ -518,19 +528,22 @@ void TextArea::Render()
 
 void TextArea::parseUserDefColor()
 {
-    m_cmUserTypeDef.clear();
-
+    std::map<std::string, int> mapTemp;
     std::smatch typeMatch;
     std::regex  typeRegx(R"(class\s([A-Za-z0-9]+))");
+    std::vector<std::string> textClone  = m_text;
 
-    for(auto iLine : m_text)
+    for(auto iLine : textClone)
     {
         if(std::regex_search(iLine, typeMatch, typeRegx)) {
             if (typeMatch.size() > 1) {
-                m_cmUserTypeDef[typeMatch[1].str()] = colorUserDef;
+                mapTemp[typeMatch[1].str()] = colorUserDef;
             }
         }
     }
+
+    m_cmUserTypeDef.clear();
+    m_cmUserTypeDef = mapTemp;
 }
 
 void TextArea::SaveToFile(std::string fileName)
@@ -550,4 +563,6 @@ void TextArea::SaveToFile(std::string fileName)
 
 TextArea::~TextArea()
 {
+    m_isRunThreadPraseSyntax = false;
+    m_threadParseSyntax.join();
 }

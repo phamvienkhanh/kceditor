@@ -17,7 +17,7 @@
             "fg" : 3
         },
         {
-            "keys": ["class"],
+            "keys": ["class", "return"],
             "fg" : 4
         },
         {

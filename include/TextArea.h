@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <thread>
 #include "ncurses/curses.h"
 
 struct Point
@@ -34,18 +35,18 @@ private:
     Rect    m_scrollView;
 
     int mypadpos = 0;
-
     std::vector<std::string> m_text;
-
     std::vector<int> m_linesShouldRender;
-
-    std::map<std::string, int> m_colorMap;
-    std::map<std::string, int> m_cmUserTypeDef;
 
     int colorComment;
     int colorUserDef;
+    std::map<std::string, int> m_colorMap;
+    std::map<std::string, int> m_cmUserTypeDef;
 
     int lineNumberWidth;
+
+    std::thread m_threadParseSyntax;
+    bool m_isRunThreadPraseSyntax;
 
 private:
     void moveCursor(int row, int col);
@@ -64,14 +65,14 @@ private:
 
     void renderRow(int row);
 
-    void parseUserDefColor();
-
 public:
 
     void HanldeEvents();
     void Render();
     void DrawBoder();
     void SaveToFile(std::string fileName);
+
+    void parseUserDefColor();
 
     TextArea(/* args */);
     ~TextArea();

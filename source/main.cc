@@ -41,12 +41,14 @@ int main(int argc, char** args)
 	// wrefresh(statusbar); //The cursor will NOT skip a column near the right edge when you comment out this line (???)
 	wrefresh(titlebar);
 	
-	TextArea textArea;
-	textArea.DrawBoder();
+	{
+		TextArea textArea;
+		textArea.DrawBoder();
 
-	while(!g_exitApp) {
-		textArea.HanldeEvents();
-		textArea.Render();
+		while(!g_exitApp) {
+			textArea.HanldeEvents();
+			textArea.Render();
+		}
 	}
 
 exit:
