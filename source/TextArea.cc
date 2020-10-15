@@ -69,15 +69,47 @@ TextArea::TextArea(/* args */)
 
 void TextArea::moveCurUp()
 {
+    bool isUp = false;
     if(m_cursor.row > 0)
     {
         m_cursor.row--;
+        isUp = true;
     }
     else if(m_cursor.row == 0)
     {
         if(m_scrollView.pos.row > 0)
         {
             m_scrollView.pos.row--;
+            isUp = true;
+        }
+    }
+
+    if(isUp)
+    {
+        int rowIndex = m_scrollView.pos.row + m_cursor.row;
+        if(rowIndex >= 0)
+        {
+            if(m_scrollView.pos.col + m_cursor.col > m_text[rowIndex].size())
+            {
+                if(m_scrollView.pos.col < m_text[rowIndex].size())
+                {
+                    m_cursor.col = m_text[rowIndex].size() - m_scrollView.pos.col;
+                }
+                else
+                {
+                    if(m_text[rowIndex].size() > m_scrollView.size.width)
+                    {
+                        m_scrollView.pos.col = m_text[rowIndex].size() - 3;
+                        m_cursor.col = 3;
+                    }
+                    else
+                    {
+                        m_scrollView.pos.col = 0;
+                        m_cursor.col = m_text[rowIndex].size();
+                    }
+                    
+                }
+            }
         }
     }
 }
