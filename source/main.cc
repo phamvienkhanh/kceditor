@@ -43,7 +43,8 @@ int main(int argc, char** args)
 	
 	{
 		TextArea textArea;
-		textArea.DrawBoder();
+		textArea.OpenFile(std::string(args[1]));
+		// textArea.DrawBoder();
 
 		while(!g_exitApp) {
 			textArea.HanldeEvents();

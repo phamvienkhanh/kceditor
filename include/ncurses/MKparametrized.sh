@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################################
 # Copyright 2019,2020 Thomas E. Dickey                                       #
-# Copyright 1998,2006 Free Software Foundation, Inc.                         #
+# Copyright 1998-2014,2017 Free Software Foundation, Inc.                    #
 #                                                                            #
 # Permission is hereby granted, free of charge, to any person obtaining a    #
 # copy of this software and associated documentation files (the "Software"), #
@@ -27,17 +27,49 @@
 # use or other dealings in this Software without prior written               #
 # authorization.                                                             #
 ##############################################################################
-# $Id: MKhashsize.sh,v 1.9 2020/02/02 23:34:34 tom Exp $
+# $Id: MKparametrized.sh,v 1.10 2020/02/02 23:34:34 tom Exp $
 #
-# MKhashsize.sh --- generate size include for hash functions
+# MKparametrized.sh -- generate indirection vectors for various sort methods
 #
-echo "/*"
-echo " * hashsize.h -- hash and token table constants"
-echo " */"
+# The output of this script is C source for an array specifying whether
+# termcap strings should undergo parameter and padding translation.
+#
+[ $# = 0 ] && set - Caps
 
-test $# = 0 && set Caps
-TABSIZE=`cat "$@" | grep -v '^[ #]' | grep -v "^$" | grep -v "^capalias"| grep -v "^infoalias" | grep -v "^userdef" | grep -v "^used_by" | wc -l`
+cat <<EOF
+#ifndef PARAMETRIZED_H
+#define PARAMETRIZED_H 1
+/*
+ * parametrized.h --- is a termcap capability parametrized?
+ *
+ * Note: this file is generated using MKparametrized.sh, do not edit by hand.
+ * A value of -1 in the table means suppress both pad and % translations.
+ * A value of 0 in the table means do pad but not % translations.
+ * A value of 1 in the table means do both pad and % translations.
+ */
 
-echo ""
-echo "#define CAPTABSIZE	${TABSIZE}"
-echo "#define HASHTABSIZE	(${TABSIZE} * 2)"
+static short const parametrized[] = {
+EOF
+
+# We detect whether % translations should be done by looking for #[0-9] in the
+# description field.  We presently suppress padding translation only for the
+# XENIX acs_* capabilities.  Maybe someday we'll dedicate a flag field for
+# this, that would be cleaner....
+
+cat "$@" | ${AWK-awk} '
+
+/^#/ { next ; }
+/^capalias/ { next ; }
+/^infoalias/ { next ; }
+/^used_by/ { next ; }
+/^userdef/ { next ; }
+
+$3 != "str"		{next;}
+$1 ~ /^acs_/		{print "-1,\t/* ", $2, " */"; count++; next;}
+$1 ~ /^label_format/	{print "-1,\t/* ", $2, " */"; count++; next;}
+$0 ~ /#[0-9]/		{print "1,\t/* ", $2, " */"; count++; next;}
+			{print "0,\t/* ", $2, " */"; count++;}
+END			{printf("} /* %d entries */;\n\n", count);}
+'
+
+echo "#endif /* PARAMETRIZED_H */"

@@ -36,7 +36,9 @@ private:
 
     int mypadpos = 0;
     std::vector<std::string> m_text;
+    std::string      m_fileName;
     std::vector<int> m_linesShouldRender;
+
 
     int colorComment;
     int colorUserDef;
@@ -71,6 +73,7 @@ public:
     void Render();
     void DrawBoder();
     void SaveToFile(std::string fileName);
+    void OpenFile(std::string fileName);
 
     void parseUserDefColor();
 

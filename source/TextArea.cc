@@ -5,6 +5,7 @@
 #include <queue>
 #include <regex>
 #include <chrono>
+#include <stdlib.h>
 
 #define MY_KEY_RETURN 10
 #define MY_KEY_BACK 127
@@ -39,7 +40,9 @@ TextArea::TextArea(/* args */)
     m_text.push_back("");
 
     // load syntax file
-    std::ifstream t("./syntax.json");
+    char* curUser = getenv ("USER");
+    std::string pathFileSyntax = "/home/" + std::string(curUser) + "/" + ".keditor/syntax.json";
+    std::ifstream t(pathFileSyntax);
     std::string str((std::istreambuf_iterator<char>(t)),
                   std::istreambuf_iterator<char>());
   
@@ -75,6 +78,8 @@ TextArea::TextArea(/* args */)
         }
         
     });
+
+    DrawBoder();
 }
 
 void TextArea::moveCurUp()
@@ -388,7 +393,7 @@ void TextArea::HanldeEvents()
         break;
     
     case KEY_F(2):
-        SaveToFile("./testFile.cpp");
+        SaveToFile(m_fileName);
         break;
 
     case KEY_RESIZE:
@@ -481,6 +486,11 @@ void TextArea::Render()
         int colInText = m_scrollView.pos.col;
         if(colInText < m_text[rowInText].size())
             lineTruncate = m_text[rowInText].substr(colInText, m_scrollView.size.width);
+
+        if(!lineTruncate.empty() && lineTruncate[lineTruncate.size() -1] == '\n')
+        {
+            lineTruncate.pop_back();
+        }
         
         clearRow(row);
         wmove(m_window, row, 0);
@@ -491,7 +501,7 @@ void TextArea::Render()
 
         Lexer lex(lineTruncate.c_str());
         for (auto token = lex.next();
-            not token.is_one_of(Token::Kind::End, Token::Kind::Unexpected);
+            token.is_not(Token::Kind::End);
             token = lex.next()) 
         {
             std::string strToken = token.lexeme();
@@ -554,11 +564,41 @@ void TextArea::SaveToFile(std::string fileName)
     {
         for(auto& line : m_text)
         {
-            fileSave <<  line  << '\n';
+            fileSave <<  line << '\n';
         }
 
         fileSave.close();
     }
+}
+
+void TextArea::OpenFile(std::string fileName)
+{
+    m_fileName = fileName;
+
+    std::ifstream fileOpen;
+    fileOpen.open(fileName);
+    if(fileOpen.is_open())
+    {
+        while (!fileOpen.eof())
+        {
+            std::string line;
+            std::getline(fileOpen, line);
+            if (!line.empty() && line[line.size() - 1] == '\n')
+            {
+                line.pop_back();
+            }
+            
+            m_text.push_back(line);
+        }
+        
+    }
+    else
+    {
+        std::ofstream filenew;
+        filenew.open(fileName);
+    }
+
+    this->Render();
 }
 
 TextArea::~TextArea()
